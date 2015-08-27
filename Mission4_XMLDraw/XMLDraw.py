@@ -1,3 +1,15 @@
+#	The solution to the programming mission 4 where you have to parse an xml file that 
+#	defines specifications to draw lines and arcs and draw this image which
+#	contains a text.  
+#
+#	To use this module requests and xmltodict must be installed. 	
+#	> pip install requests 
+#	> pip install xmltodict
+#
+#
+#	Author : Alican Salor
+#	date : 27.09.2015
+
 import HackThisSiteInterface as HTS 
 import xmltodict
 import bz2
@@ -12,7 +24,7 @@ def sendResponse(solution):
 
 def parseXML(xmlContent):
 
-
+	#hashmap for colors 
 	colors = {
 		'yellow' : '#ffff00',
 		'blue' : '#0000ff',
@@ -26,23 +38,26 @@ def parseXML(xmlContent):
 	xmlDict = xmltodict.parse(xmlContent);
 	width = 1000;
 	height = 1000;
-	#
+	
 	img = Image.new('RGB', (width, height));
 	draw = ImageDraw.Draw(img);
 
-	# #root is ppcPlot
+	#root is ppcPlot 
+	#first parse the lines and draw those lines
+	#the trick here is to tranform the axis used by python to cartesian axis
+
 	for item in xmlDict['ppcPlot']['Line']:
 		if(item.has_key("Color")):
-			# print(item['XStart'] + " " + item['YStart'] + " " + item['Color']);
 			draw.line((float(item['XStart']),height-float(item['YStart']),float(item['XEnd']),height-float(item['YEnd'])),fill=colors[item['Color']]);
 		else:
-			# print(item['XStart'] + " " + item['YStart'] + " ");
 			draw.line((float(item['XStart']),height-float(item['YStart']),float(item['XEnd']),height-float(item['YEnd'])),fill=colors['white']);
 	
+	#then parse the arcs
+	#the trick here is to again cartesian axis tranformation and furthermore transform the angle from clockwise
+	#counterclockwise
 
 	for item in xmlDict['ppcPlot']['Arc']:
 		if(item.has_key("Color")):
-			# print(item['XStart'] + " " + item['YStart'] + " " + item['Color']);
 			draw.arc((float(item['XCenter'])-float(item['Radius']),
 					height-(float(item['YCenter'])+float(item['Radius'])),
 					float(item['XCenter'])+float(item['Radius']),
@@ -50,7 +65,6 @@ def parseXML(xmlContent):
 				),
 				-1*(int(item['ArcStart']) + int(item['ArcExtend'])),-1*int(item['ArcStart']),fill=colors[item['Color']]);
 		else:
-			# print(item['XStart'] + " " + item['YStart'] + " ");
 			draw.arc((float(item['XCenter'])-float(item['Radius']),
 					height-(float(item['YCenter'])+float(item['Radius'])),
 					float(item['XCenter'])+float(item['Radius']),

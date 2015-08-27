@@ -1,25 +1,43 @@
+#	The solution to the programming mission 5 where you have to recover a corrupted .bz2 file   
+#	Decompress it and obtain the password drawn on the image.
+#
+#	we need to get rid of 0d0a couples -> \r \n
+#	\n are translated to \r \n in windows so we don't know which \r \n should be in the file
+#	we have to brute force and try every combination. 
+#	Yet when the file is analysed it can be seen there there is more than enough 0d0a couples and since 
+#	there are 2^n (where n is the number of 0d0a couples) combinations, we have to consider a smarter brute force
+#	algorithm.
+#	The algorithm I've implemented, obtains combinations with specified group size. These addresses in these combinations
+# 	are then altered from 0d0a to 0a. A useful technique is also starting from the largest group size and then decreasing
+#	the size of the groups. 
+#	Another feature I considered was to use a distance threshold where we take groups 0d0a couples which 
+#	have a distance between each other greater than the threshold as \n isn't such a common character. However 
+#	I didn't need to use this feature.
+#
+#
+#
+#	To use this module requests and xmltodict must be installed. 	
+#	> pip install requests 
+#
+#
+#	Author : Alican Salor
+#	date : 27.09.2015
+
+
 import HackThisSiteInterface as HTS 
 import bz2
 import binascii
 import sys
-import itertools
 import math
 from PIL import Image
 from StringIO import StringIO
 
-
-#we need to get rid of 0d0a couples -> \r \n
-#\n are translated to \r \n in windows so we don't know which \r \n should be in the file
-#we have to brute force and try every combination -> use a tree structure
-
 processedBranches = 0;
 
 def corruptFile(originalContent):
-
+	#for testing 
 
 	content = binascii.hexlify(bz2.compress(originalContent));
-	# print(bz2.decompress(binascii.unhexlify(content)));
-
 	address = content.find('0a',0);
 	while(address >= 0):
 		
@@ -35,9 +53,9 @@ def corruptFile(originalContent):
 	return content;
 
 def groupAddressesRecursive(addresses,allGroups,groupAddress,currentIndex,groupSize,distanceThreshold):
+	#obtain all combinations with specified group size of the given addresses
 
 	if ((groupAddress is not None and len(groupAddress) >= groupSize) or currentIndex >= len(addresses) or len(addresses)-currentIndex+len(groupAddress) < groupSize):
-		# print(groupAddress);
 		return groupAddress;
 
   	else:
@@ -83,9 +101,14 @@ def updateAddresses(addresses,updatedAddress):
 	return newAddresses;
 
 #recursively construct the tree and check if crc holds
-def constructTreeRecursive(addresses,currentAddress,data):
+def recoverAllCombinations(addresses,currentAddress,data):
+
+	# obtains all 2^n combinations and check if the the file is recovered. As anticipated 
+	# this function won't be able to brute-force the solution under the time limit which is
+	# 10 minutes
+	#
+
 	global processedBranches;
-	#if end of file check crc and return
 	
 	if (currentAddress >= len(addresses)):
 		processedBranches += 1;
@@ -93,10 +116,13 @@ def constructTreeRecursive(addresses,currentAddress,data):
 		
 		try:
   			dec = bz2.decompress(binascii.unhexlify(data));
-  			print('\nrecovered\n');
-  			pngRecFile = open('test_rec.png','wb');
+  			print('\nrecovered @ recover.png\n');
+  			pngRecFile = open('recover.png','wb');
   			pngRecFile.write(dec);
-
+  			solution = raw_input("password: ");
+			print("sending solution")
+			payload = {'solution' : solution, 'submitbutton' : 'submit'};
+			HTS.postPage("https://www.hackthissite.org/missions/prog/5/index.php",payload);
 
   			sys.exit(0);
 
@@ -104,16 +130,14 @@ def constructTreeRecursive(addresses,currentAddress,data):
 			return;
 
   	else:
-  		# print("go left");
   		constructTreeRecursive(addresses,currentAddress+1,data); #unchanged
-  		# print("go right");
   		#update the addresses
   		newData = data[0:addresses[currentAddress]]+data[addresses[currentAddress]+2:len(data)];
   		addresses = updateAddresses(addresses,addresses[currentAddress]);
   		constructTreeRecursive(addresses,currentAddress+1,newData); #changed
   		
 
-def recover(addresses,data):
+def recoverGrouped(addresses,data):
 	#change the given addresses -> 0d0a to 0a
 	newData = "";
 	lastIndex=0
@@ -125,14 +149,14 @@ def recover(addresses,data):
 
 	newData = newData + data[lastIndex:len(data)];
 
+	# bz2.decompress does the cyclic redundancy check first and throws an exception if the file 
+	# doesn't pass the check. If it does pass the check then we have recovered the file
 	try:
 		dec = bz2.decompress(binascii.unhexlify(newData));
-		print('\nrecovered\n');
+		print('\nRecovered the file. Check recovered.png and enter the password\n');
 		pngRecFile = open('recovered.png','wb');
 		pngRecFile.write(dec);
 		pngRecFile.close();
-		# image = Image.open('recovered.png');
-		# image.show();
 		solution = raw_input("password: ");
 		print("sending solution")
 		payload = {'solution' : solution, 'submitbutton' : 'submit'};
@@ -142,9 +166,6 @@ def recover(addresses,data):
 
 	except IOError:
 		return;
-
-
-
 
 def downloadFile():
 	#login to the site
@@ -157,18 +178,11 @@ def downloadFile():
 	print("file downloaded..");
 	return response;
 
-# omitAddresses([4,12],"12130d0a12350d0a12");
 
-# f = open('test.png','r');
-# content = f.read();
-# hexData = corruptFile(content);
 response = downloadFile();
 hexData = binascii.hexlify(response.content);
-
-
 print("getting corrupted bytes");
 addresses = getCorruptedByteAddresses(hexData);
-# constructTreeRecursive(addresses,0,hexData);
 print("starting recovering file");
 for i in xrange(1,len(addresses)):
 	print("\ngroups of " + str(len(addresses)-i));
@@ -177,7 +191,7 @@ for i in xrange(1,len(addresses)):
 		sys.stdout.write('\r{0}%'.format(float(100*itemIndex/len(grouped))));
 		sys.stdout.flush();
 		processedBranches = 0;
-		recover(grouped[itemIndex],hexData);
+		recoverGrouped(grouped[itemIndex],hexData);
 
 
 

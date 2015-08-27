@@ -1,71 +1,34 @@
+#	solution to the programming mission 2 where you have to analyze an image 
+#	obtain the embedded morse code and decoded the morse code	
+#
+#
+#	To use this module requests must be installed. 	
+#	> pip install requests 
+#
+#
+#	Author : Alican Salor
+#	date : 27.09.2015
+
+
 import HackThisSiteInterface as HTS
 from PIL import Image, ImageDraw
 from StringIO import StringIO
 
 #create a global hashmap for morse alphabet -> non ascii characters are not included 
 morseAlphabet = {
-					'.' : 'e',
-					'..' : 'i',
-					'...' : 's',
-					'....' : 'h',
-					'.....' : '5',
-					'....-' : '4',
-					'...-' : 'v',
-					'...-.' : '',
-					'...--' : '3',
-					'..-' : 'u',
-					'..-.' : 'f',
-					'..-..' : '',
-					'..--' : '',
-					'..--.' : '',
-					'..--..' : '?',
-					'..--.-' : '_',
-					'..---' : '2',
-					'.-' : 'a',
-					'.-.' : 'r',
-					'.-..' : 'l',
-					'.-..-' : '',
-					'.-..-.' : '\"',
-					'.-.-' : '',
-					'.-.-.' : '+',
-					'.-.-.-' : '.',
-					'.--' : 'w',
-					'.--.' : 'p',
-					'.--..' : '',
-					'.--.-' : '',
-					'.--.-.' : '',
-					'.---' : 'j',
-					'.---.' : '',
-					'.----' : '1',
-					'.----.' : '\'',
-					'-' : 't',
-					'-.' : 'n',
-					'-..' : 'd',
-					'-...' : 'b',
-					'-....' : '6',
-					'-....-' : '-',
-					'-...-' : '=',
-					'-..-' : 'x',
-					'-..-.' : '/',
-					'-.-' : 'k',
-					'-.-.' : 'c',
-					'-.-..' : '',
-					'-.--' : 'y',
-					'-.--.' : '',
-					'-.--.-' : '()',
-					'--' : 'm',
-					'--.' : 'g',
-					'--..' : 'z',
-					'--...' : '7',
-					'--.-' : 'q',
-					'--.-.' : '',
-					'--.--' : '',
-					'---' : 'o',
-					'---.' : '',
-					'---..' : '8',
-					'---...' : ':',
-					'----' : 'ch',
-					'----.' : '9',
+					'.' : 'e','..' : 'i','...' : 's','....' : 'h','.....' : '5','....-' : '4','...-' : 'v',
+					'...-.' : '','...--' : '3','..-' : 'u','..-.' : 'f','..-..' : '','..--' : '',
+					'..--.' : '','..--..' : '?','..--.-' : '_','..---' : '2','.-' : 'a',
+					'.-.' : 'r','.-..' : 'l','.-..-' : '','.-..-.' : '\"','.-.-' : '',
+					'.-.-.' : '+','.-.-.-' : '.','.--' : 'w','.--.' : 'p','.--..' : '',
+					'.--.-' : '','.--.-.' : '','.---' : 'j','.---.' : '','.----' : '1',
+					'.----.' : '\'','-' : 't','-.' : 'n','-..' : 'd','-...' : 'b',
+					'-....' : '6','-....-' : '-','-...-' : '=','-..-' : 'x',
+					'-..-.' : '/','-.-' : 'k','-.-.' : 'c','-.-..' : '',
+					'-.--' : 'y','-.--.' : '','-.--.-' : '()','--' : 'm',
+					'--.' : 'g','--..' : 'z','--...' : '7','--.-' : 'q',
+					'--.-.' : '','--.--' : '','---' : 'o','---.' : '',
+					'---..' : '8','---...' : ':','----' : 'ch','----.' : '9',
 					'-----' : '0'
 };
 
@@ -81,6 +44,8 @@ def getImage():
 	return im;
 
 def analyseImage(image):
+	#analyze the image to get the embedded morse code
+
 	print("analysing image \n");
 	morseCode = "";
 	pixelData = image.load();
@@ -101,6 +66,8 @@ def analyseImage(image):
 	return morseCode.split();
 
 def decodeMorse(codeList):
+	#decoded the embedded morse code
+
 	print("decoding morse \n");
 	global morseAlphabet;
 	decodedText = "";
@@ -111,6 +78,8 @@ def decodeMorse(codeList):
 	return decodedText;
 
 def sendResponse(decodedText):
+	#send back the decoded text
+
 	print(decodedText);
 	print("sending solution")
 	payload = {'solution' : decodedText, 'submitbutton' : 'submit'};
