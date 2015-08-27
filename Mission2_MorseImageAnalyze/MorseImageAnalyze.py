@@ -39,7 +39,8 @@ def getImage():
 	#start the mission
 	HTS.getPage("https://www.hackthissite.org/missions/prog/2/");
 	#get the image
-	im = Image.open(StringIO(HTS.getPage("https://www.hackthissite.org/missions/prog/2/PNG")));
+	response = HTS.getPage("https://www.hackthissite.org/missions/prog/2/PNG");
+	im = Image.open(StringIO(response.content));
 	print("image downloaded \n")
 	return im;
 
