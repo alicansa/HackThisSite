@@ -63,7 +63,7 @@ def getPage(url):
 	response = requests.get(url,headers=headers,cookies=cookies);
 
 	if (response.status_code == 200):
-		return response.content;
+		return response;
 	else:
 		print("something went wrong (code: " + str(response.status_code) + ")");
 
