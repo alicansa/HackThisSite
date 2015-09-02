@@ -5,7 +5,7 @@
 #
 #
 #	Author : Alican Salor
-#	date : 26.09.2015
+#	date : 26.08.2015
 
 import requests
 import json

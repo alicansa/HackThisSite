@@ -8,7 +8,7 @@
 #
 #
 #	Author : Alican Salor
-#	date : 27.09.2015
+#	date : 27.08.2015
 
 import HackThisSiteInterface as HTS 
 import xmltodict

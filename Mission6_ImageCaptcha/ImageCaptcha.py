@@ -1,12 +1,22 @@
+# 	The solution to the HackThisSite programming mission 6 where you have write the text given as an image on the
+# 	challenge page. The problem is that the text is pretty long. Thus we have to develop an OCR algorithm to analyze
+# 	the image and find what letters are used. Two different methods can be used in this challenge. One is to use a
+# 	real OCR algorithm and decide on the letters according to some heuristics measures by looking at each pixel.
+# 	Another method that can be used is to mine the data that is used to draw the image that we have to analyze.
+# 	This data can be found in the javascript code on the challenge page. This data has to be mined so that data
+#   corresponding to each letter is grouped and isolated. Afterwards this isolated data can be analysed 
+# 	further with heuristics measures and a decision can be made on what letter is used. 
+
+#
+#	To use this module requests must be installed. 	
+#	> pip install requests 
+#
+#
+#	Author : Alican Salor
+#	date : 02.09.2015
+
 import HackThisSiteInterface as HTS
 import math
-
-spiralUpDelta = 268;
-spiralDownDelta = 227;
-deltaRadius = [20,23,28,34,40,49,57];
-centerXShift = 15;
-centerYShift = 5;
-
 
 
 letterLookUp ={
@@ -26,6 +36,8 @@ letterLookUp ={
 
 def organizeData(data):
 
+	#this function is used to organize the image data obtained from the javascript code, according to whether the data corresponds to a line or arc
+
 	dataArr = data.split(",");
 	organizedData = [];
 	index = 0;
@@ -44,6 +56,8 @@ def organizeData(data):
 
 def findMaxY(organizedData):
 
+	#find the max y coordinate of a given data
+
 	maxY = -10000000000;
 
 	for item in organizedData:
@@ -60,8 +74,12 @@ def findMaxY(organizedData):
 
 	return maxY;
 
-
 def findMinMax(organizedData):
+
+	# this function is used to find the minimun and maximum x/y coordinates occuring in the
+	# data that is used to draw the image 
+	# Afterwards these max/min x/y coordinates are used for finding the center of the spiral
+
 	minX = 1000000000;
 	minY = minX;
 	maxX = -100000000;
@@ -107,16 +125,22 @@ def findMinMax(organizedData):
 
 	return [maxX,minX,maxY,minY];
 
-
 def findCenter(maxX,minX,maxY,minY):
 
-	global deltaRadius;
-	global spiralUpDelta;
-	global spiralDownDelta;
+	# this function is used to find the center of the spiral. This function is integral to grouping and isolating the 
+	# letter data
+
+	spiralUpDelta = 268;
+	spiralDownDelta = 227;
+	centerXShift = 15;
+	centerYShift = 5;
 
 	return [round((maxX+minX)/2)+centerXShift,round(((maxY-spiralDownDelta)+(minY+spiralUpDelta))/2)-centerYShift];
 
 def reverseTranslateBoundingBox(center,boundingBoxData):
+
+	# translate x/y coordinates of the given data which has the origin as center of the spiral back to the 
+	# original origin 
 
 	reversedData = [];
 	for item in boundingBoxData:
@@ -126,6 +150,10 @@ def reverseTranslateBoundingBox(center,boundingBoxData):
 	return reversedData;
 
 def reverseTranlateBoundedData(center,boundedData):
+
+	# translate x/y coordinates of the given data which has the origin as center of the spiral back to the 
+	# original origin 
+
 	reversedData=[];
 
 	for item in boundedData:
@@ -138,6 +166,9 @@ def reverseTranlateBoundedData(center,boundedData):
 
 def translateBoundingBox(center,boundingBoxData):
 
+	# translate x/y coordinates of the given data which has the original origin to the 
+	# center of spiral as the new origin
+
 	translatedData = [];
 	for item in boundingBoxData:
 		translatedData.append([item[0]-center[0],center[1]-item[1]]);
@@ -145,6 +176,9 @@ def translateBoundingBox(center,boundingBoxData):
 	return translatedData;
 
 def translateBoundedData(center,boundedData):
+
+	# translate x/y coordinates of the given data which has the original origin to the 
+	# center of spiral as the new origin
 
 	translatedData=[];
 
@@ -157,6 +191,7 @@ def translateBoundedData(center,boundedData):
 	return translatedData;
 
 def rotateBoundingBox(deg,boundingBoxData):
+	#rotate the given data around the center of the spiral
 	#use a rotation matrix
 	rad = -1*(math.pi*deg)/180;
 	rotatedData = [];
@@ -169,6 +204,9 @@ def rotateBoundingBox(deg,boundingBoxData):
 	return rotatedData;
 
 def rotateBoundedData(deg,boundedData):
+	#rotate the given data around the center of the spiral
+	#use a rotation matrix
+
 	rotatedData=[];
 	rad = -1*(math.pi*deg)/180;
 	for item in boundedData:
@@ -188,13 +226,19 @@ def rotateBoundedData(deg,boundedData):
 	return rotatedData;
 
 def getBoundingBoxData(center,minY,width):
+
+	# return the coordinates of the bounding box that is used to isolate the letter data at a given rotation
+	# degree
+
+
 	return [[center[0]-width/2,minY-10],
 			[center[0]+width/2,minY-10],
 			[center[0]-width/2,center[1]],
 			[center[0]+width/2,center[1]]];
 
-
 def getLineFunctionCoeff(x1,x2,y1,y2):
+
+	# we have an analytic model for the box bounding the letters
 	# y = a + bx -> we return [a b]
 
 	b = (y2-y1)/(x2-x1);
@@ -218,7 +262,6 @@ def data2TextDistance(boundedLetter):
 				else:
 					sum = sum + math.sqrt(math.pow(boundedLetter[itemIndex1][0]-boundedLetter[itemIndex2][0],2)+ math.pow(boundedLetter[itemIndex1][1]-boundedLetter[itemIndex2][1],2)) + math.sqrt(math.pow(boundedLetter[itemIndex1][0]-boundedLetter[itemIndex2][2],2)+ math.pow(boundedLetter[itemIndex1][1]-boundedLetter[itemIndex2][3],2))+ math.sqrt(math.pow(boundedLetter[itemIndex1][2]-boundedLetter[itemIndex2][0],2)+ math.pow(boundedLetter[itemIndex1][3]-boundedLetter[itemIndex2][1],2));
 	return int(sum);
-
 
 def data2TextQuadrantPointCount(boundedLetter,center,maxY):
 	#check the number of points a letter has in each quadrant
@@ -300,24 +343,15 @@ def data2TextQuadrantPointCount(boundedLetter,center,maxY):
 
 	return [q1Count, q2Count, q3Count, q4Count]
 
-
-def data2TextWeightCenter(boundedLetter,center,maxY,lineCount,arcCount):
-
-	sumX = 0;
-	sumY = 0;
-	for item in boundedLetter:
-
-		if (len(item)==5):
-			sumX = sumX + item[0] - center[0];
-			sumY = sumY + item[1] - maxY;
-		else:
-			sumX = sumX + item[0] + item[2] - 2*center[0];
-			sumY = sumY + item[1] + item[3] - 2*maxY;
-
-	return [sumX/(lineCount*4+arcCount*2),sumY/(lineCount*4+arcCount*2)];
-
 def data2Text(boundedLetter,center,maxY):
-	#count how many arcs and lines the letter is formed of
+	# this function first counts how many arcs and lines the letter is formed of and tries to make a decision on which letter is used
+	# Only some letters can be distinguished by this function. these letters are 0,2,3,8,B,C,E
+	#Afterwards if the letter can not be distinguished by counting the number of arcs and lines 
+	# other methods are used for 5 and D the sum of distances between each point is used to distinguish.
+	# For 6 and 9  whether the center of arc is below or above the center of line is checked to distinguish.
+	# For A,1,F,4,7 the number of points in each quadrant of the bounding box of the letter is counted and 
+	# used to distinguish the letters from each other
+
 	arcCount = 0;
 	lineCount = 0;
 	for item in boundedLetter:
@@ -375,8 +409,9 @@ def data2Text(boundedLetter,center,maxY):
 
 	return foundLetter;
 
-
 def getBoundedLetters(boundedData,center):
+
+	#this function retrieves each letter from the group of letters that were obtained previously
 
 	boxHeight = 18;
 	index = 0;
@@ -430,7 +465,7 @@ def getBoundedLetters(boundedData,center):
 
 def getBoundedData(organizedData,boundingBoxData,rotationDegree):
 
-	#get the linear function coeffs for bounding
+	#this function bounds and retrieves data used for letters that are at the same rotation degree around the spiral center
 
 	boundedData = [];
 	coeffLeftSide = [];
@@ -729,7 +764,6 @@ def getBoundedData(organizedData,boundingBoxData,rotationDegree):
 
 def processData(organizedData):
 	print("processing data");
-
 
 	finalTextArray = [None]*253;
 	#find min max points of the spiral
